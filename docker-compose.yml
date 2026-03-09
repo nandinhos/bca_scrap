@@ -1,0 +1,55 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8090:80"
+    volumes:
+      - ./analise.php:/var/www/html/analise.php
+      - ./topo.php:/var/www/html/topo.php
+      - ./rodape.php:/var/www/html/rodape.php
+      - ./index.php:/var/www/html/index.php
+      - ./arcadia:/var/www/html/arcadia
+    environment:
+      - DB_HOST=mariadb
+      - DB_USER=bca_user
+      - DB_PASS=bca_pass
+      - DB_NAME=bca_db
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+  mariadb:
+    image: mariadb:10.11
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpass
+      - MYSQL_DATABASE=bca_db
+      - MYSQL_USER=bca_user
+      - MYSQL_PASSWORD=bca_pass
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "root", "-prootpass"]
+      start_period: 10s
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    ports:
+      - "8091:80"
+    environment:
+      - PMA_HOST=mariadb
+      - PMA_PORT=3306
+      - PMA_DATABASE=bca_db
+      - PMA_USER=bca_user
+      - PMA_PASSWORD=bca_pass
+      - PHP_UPLOAD_MAX_FILESIZE=100M
+      - PHP_MAX_INPUT_VARS=1000
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+volumes:
+  mariadb_data:
