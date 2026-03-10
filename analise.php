@@ -124,16 +124,30 @@ if (isset($arquivo) && file_exists($caminho.$arquivo)) {
             $nome_guerra = strtoupper($militar['nome_guerra']);
             $nome_completo = strtoupper($militar['nome_completo']);
             
-            $total = 0;
-            $total += substr_count($tei, $saram);
-            $total += substr_count($tei, str_replace('-', '', $saram));
-            $total += substr_count($tei, str_replace('.', '', $saram));
-            $total += substr_count($tei, $nome_guerra);
+            // Primeiro: contar por SARAM
+            $total_saram = 0;
+            $total_saram += substr_count($tei, $saram);
+            $total_saram += substr_count($tei, str_replace('-', '', $saram));
+            $total_saram += substr_count($tei, str_replace('.', '', $saram));
             
-            $partes_nome = explode(' ', $nome_completo);
-            foreach ($partes_nome as $parte) {
-                if (strlen($parte) > 3) {
-                    $total += substr_count($tei, $parte);
+            $encontrado_por = '';
+            if ($total_saram > 0) {
+                $encontrado_por = 'SARAM';
+                $total = 1;
+            } else {
+                // Se não encontrou por SARAM, buscar por nome completo
+                $total_nome = 0;
+                $partes_nome = explode(' ', $nome_completo);
+                foreach ($partes_nome as $parte) {
+                    if (strlen($parte) > 3) {
+                        $total_nome += substr_count($tei, $parte);
+                    }
+                }
+                if ($total_nome > 0) {
+                    $encontrado_por = 'NOME';
+                    $total = 1;
+                } else {
+                    $total = 0;
                 }
             }
             
@@ -142,7 +156,7 @@ if (isset($arquivo) && file_exists($caminho.$arquivo)) {
                 $resp_efetivo .= '<td class="px-4 py-3 font-medium text-slate-800">'.$militar['nome_guerra'].'</td>';
                 $resp_efetivo .= '<td class="px-4 py-3"><span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">'.$militar['posto'].'</span></td>';
                 $resp_efetivo .= '<td class="px-4 py-3 text-slate-600 font-mono text-sm">'.$militar['saram'].'</td>';
-                $resp_efetivo .= '<td class="px-4 py-3"><span class="px-2 py-1 bg-emerald-100 text-emerald-800 text-xs rounded-full">'.$total.'x</span></td>';
+                $resp_efetivo .= '<td class="px-4 py-3"><span class="px-2 py-1 bg-emerald-100 text-emerald-800 text-xs rounded-full">✓ Encontrado</span> <span class="text-xs text-slate-400">('.$encontrado_por.')</span></td>';
                 $resp_efetivo .= '</tr>';
                 
                 $sql_check = "SELECT id FROM bca_email WHERE func_id = ".$militar['id']." AND bca = '".$arquivo."'";
