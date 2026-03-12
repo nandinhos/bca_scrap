@@ -1,0 +1,7 @@
+arcadia/busca_bca/boletim_bca/*.pdf
+arcadia/busca_bca/boletim_bca/*.txt
+.DS_Store
+*.log
+vendor/
+node_modules/
+.env
