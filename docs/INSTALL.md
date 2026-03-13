@@ -412,5 +412,5 @@ Para dúvidas técnicas:
 
 ---
 
-*Documento elaborado para GAC-PAC/COPAC*
+*Documento elaborado para GAC-PAC*
 *Versão: 1.0 - Março/2026*

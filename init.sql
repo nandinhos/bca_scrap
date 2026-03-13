@@ -1,9 +1,9 @@
 -- ===========================================
 -- Schema e Dados Iniciais - Sistema BCA
--- GAC-PAC/COPAC
+-- GAC-PAC
 -- ===========================================
 
--- Tabela de efetivo do GAC-PAC/COPAC
+-- Tabela de efetivo do GAC-PAC
 CREATE TABLE IF NOT EXISTS efetivo (
     id INT AUTO_INCREMENT PRIMARY KEY,
     saram VARCHAR(8) NOT NULL UNIQUE,
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS bca_email (
     FOREIGN KEY (func_id) REFERENCES efetivo(id)
 );
 
--- Tabela de palavras-chave específicas do GAC-PAC/COPAC
+-- Tabela de palavras-chave específicas do GAC-PAC
 CREATE TABLE IF NOT EXISTS palavras_chave (
     id INT AUTO_INCREMENT PRIMARY KEY,
     palavra VARCHAR(100) NOT NULL,
@@ -42,6 +42,18 @@ CREATE TABLE IF NOT EXISTS palavras_chave (
     ativa TINYINT(1) DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Inserir palavras-chave do GAC-PAC
+INSERT INTO palavras_chave (palavra, cor, ativa) VALUES 
+('GAC-PAC', '3498DB', 0),
+('COPAC', '2d54f0', 0),
+('LINK-BR', 'db2424', 0),
+('KC-390', '24db42', 0),
+('KC-X', '48d560', 0),
+('FX-2', 'd3d548', 0),
+('CAS', '48abd5', 0),
+('CAA', '48abd5', 0),
+('CEAG', '48abd5', 0);
 
 -- Tabela de log de execuções
 CREATE TABLE IF NOT EXISTS bca_execucoes (
@@ -56,21 +68,7 @@ CREATE TABLE IF NOT EXISTS bca_execucoes (
 );
 
 -- --------------------------------------------------------
--- Dados: Palavras-chave (todas desativadas por padrão)
--- --------------------------------------------------------
-INSERT INTO palavras_chave (palavra, cor, ativa) VALUES 
-('GAC-PAC', '3498DB', 0),
-('COPAC', '2d54f0', 0),
-('LINK-BR', 'db2424', 0),
-('KC-390', '24db42', 0),
-('KC-X', '48d560', 0),
-('FX-2', 'd3d548', 0),
-('CAS', '48abd5', 0),
-('CAA', '48abd5', 0),
-('CEAG', '48abd5', 0);
-
--- --------------------------------------------------------
--- Dados: Efetivo GAC-PAC/COPAC
+-- Dados: Efetivo GAC-PAC
 -- --------------------------------------------------------
 INSERT INTO efetivo (saram, nome_guerra, nome_completo, posto, especialidade, email, om_origem, ativo, oculto) VALUES
 ('3047512', 'CASTILHO', 'Diogo Silva CASTILHO', 'Cel Av', NULL, 'castilhodsc@fab.mil.br', 'GAC-PAC', 1, 0),

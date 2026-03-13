@@ -1,7 +1,7 @@
 <?php
 /**
  * ===========================================
- * BUSCA AUTOMATIZADA - GAC-PAC/COPAC
+ * BUSCA AUTOMATIZADA - GAC-PAC
  * ===========================================
  * 
  * Objetivo: Buscar BCA do dia atual automaticamente
@@ -34,7 +34,7 @@ define('CENDOC_URL', 'http://www.cendoc.intraer/sisbca/consulta_bca/');
 define('ICEA_URL', 'http://www.icea.intraer/app/arcadia/busca_bca/boletim_bca/');
 
 echo "===========================================\n";
-echo "BUSCA AUTOMATIZADA - GAC-PAC/COPAC\n";
+echo "BUSCA AUTOMATIZADA - GAC-PAC\n";
 echo "Início: " . date('Y-m-d H:i:s') . "\n";
 echo "===========================================\n";
 

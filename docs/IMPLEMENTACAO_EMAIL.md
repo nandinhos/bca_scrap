@@ -1,8 +1,8 @@
-# Implementação do Sistema de Envio de Emails - BCA GAC-PAC/COPAC
+# Implementação do Sistema de Envio de Emails - BCA GAC-PAC
 
 ## 1. Visão Geral
 
-Este documento descreve a implementação completa do sistema de envio de emails para o Boletim de Comando da Aeronáutica (BCA) no âmbito do GAC-PAC/COPAC. O sistema contempla duas modalidades de envio: **automático** (via CRON) e **manual** (acionado pelo operador após busca).
+Este documento descreve a implementação completa do sistema de envio de emails para o Boletim de Comando da Aeronáutica (BCA) no âmbito do GAC-PAC. O sistema contempla duas modalidades de envio: **automático** (via CRON) e **manual** (acionado pelo operador após busca).
 
 ---
 
@@ -170,7 +170,7 @@ environment:
 ```php
 <?php
 // ===========================================
-// FUNÇÕES DE ENVIO DE EMAIL - GAC-PAC/COPAC
+// FUNÇÕES DE ENVIO DE EMAIL - GAC-PAC
 // ===========================================
 
 // Configurações SMTP
@@ -397,7 +397,7 @@ Fim
 ```php
 <?php
 /**
- * BUSCA AUTOMATIZADA - GAC-PAC/COPAC
+ * BUSCA AUTOMATIZADA - GAC-PAC
  * Executar via CRON: 0 8-17 * * 1-5 (hora em hora, segunda a sexta)
  */
 
@@ -987,7 +987,7 @@ Gerar PDF com relatório mensal de menções.
 ## 14. Contatos e Suporte
 
 - **Email do Sistema**: fernandofss@fab.mil.br
-- **Responsável**: Fernando (GAC-PAC/COPAC)
+- **Responsável**: Fernando (GAC-PAC)
 - **Desenvolvedor**: Equipe de Desenvolvimento GAC-PAC
 
 ---

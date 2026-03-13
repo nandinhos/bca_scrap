@@ -2,7 +2,7 @@
 
 ## 1. Visão Geral
 
-Este documento descreve a implementação do sistema de busca automatizada de Boletins de Comando da Aeronáutica (BCA) no sistema GAC-PAC/COPAC.
+Este documento descreve a implementação do sistema de busca automatizada de Boletins de Comando da Aeronáutica (BCA) no sistema GAC-PAC.
 
 ### 1.1 Objetivo
 

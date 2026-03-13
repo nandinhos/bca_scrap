@@ -2,7 +2,7 @@ services:
   web:
     build: .
     ports:
-      - "8090:80"
+      - "8092:80"
     volumes:
       - ./analise.php:/var/www/html/analise.php
       - ./topo.php:/var/www/html/topo.php
@@ -23,7 +23,7 @@ services:
       - SMTP_PASS=MNIGABTPLESDSNDK
       - SMTP_FROM=fernandofss@fab.mil.br
       - SMTP_FROM_NAME=Sistema BCA GAC-PAC
-      - BASE_URL=http://localhost:8090
+      - BASE_URL=http://localhost:8092
     depends_on:
       mariadb:
         condition: service_healthy
@@ -39,7 +39,7 @@ services:
       - mariadb_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "root", "-prootpass"]
+      test: [ "CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "root", "-prootpass" ]
       start_period: 10s
       interval: 5s
       timeout: 5s
@@ -48,7 +48,7 @@ services:
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
     ports:
-      - "8091:80"
+      - "8093:80"
     environment:
       - PMA_HOST=mariadb
       - PMA_PORT=3306

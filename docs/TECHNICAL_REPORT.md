@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-O **BCA Scrap** é uma aplicação web desenvolvida em PHP que automatiza a busca e análise de Boletins de Comando da Aeronáutica (BCA) da Força Aérea Brasileira, com foco no efetivo do GAC-PAC/COPAC.
+O **BCA Scrap** é uma aplicação web desenvolvida em PHP que automatiza a busca e análise de Boletins de Comando da Aeronáutica (BCA) da Força Aérea Brasileira, com foco no efetivo do GAC-PAC.
 
 ---
 
@@ -279,4 +279,4 @@ Uso interno - Força Aérea Brasileira
 
 ## Contato
 
-Desenvolvido para GAC-PAC/COPAC
+Desenvolvido para GAC-PAC

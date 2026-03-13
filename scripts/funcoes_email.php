@@ -1,6 +1,6 @@
 <?php
 // ===========================================
-// FUNÇÕES DE ENVIO DE EMAIL - GAC-PAC/COPAC
+// FUNÇÕES DE ENVIO DE EMAIL - GAC-PAC
 // Versão usando PHPMailer
 // ===========================================
 

@@ -494,7 +494,7 @@ if (isset($arquivo) && file_exists($caminho.$arquivo)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BCA - GAC-PAC/COPAC</title>
+    <title>BCA - GAC-PAC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -541,7 +541,7 @@ if (isset($arquivo) && file_exists($caminho.$arquivo)) {
     <!-- Sidebar fixa -->
     <aside class="fixed left-0 top-0 w-64 h-screen bg-fab-800 text-white flex flex-col z-50">
             <div class="p-4 border-b border-fab-600">
-                <h1 class="text-lg font-bold">GAC-PAC / COPAC</h1>
+                <h1 class="text-lg font-bold">GAC-PAC</h1>
                 <p class="text-fab-300 text-xs">Sistema de Busca BCA</p>
             </div>
             
@@ -595,7 +595,7 @@ if (isset($arquivo) && file_exists($caminho.$arquivo)) {
             <template x-if="menu === 'efetivo'">
                 <div>
                     <h2 class="text-2xl font-bold text-slate-800">Controle do Efetivo</h2>
-                    <p class="text-slate-500 mt-1">Gerencie o cadastro dos militares do GAC-PAC/COPAC</p>
+                    <p class="text-slate-500 mt-1">Gerencie o cadastro dos militares do GAC-PAC</p>
                 </div>
             </template>
             <template x-if="menu === 'palavras'">
@@ -750,7 +750,7 @@ if (isset($arquivo) && file_exists($caminho.$arquivo)) {
                 </svg>
             </div>
             <h3 class="text-lg font-semibold text-fab-700 mb-2">Nenhuma Ocorrência Encontrada</h3>
-            <p class="text-fab-600">Não foram encontradas ocorrências do efetivo GAC-PAC/COPAC neste Boletín de Comando da Aeronáutica</p>
+            <p class="text-fab-600">Não foram encontradas ocorrências do efetivo GAC-PAC neste Boletín de Comando da Aeronáutica</p>
         </div>
         <?php endif; ?>
 
