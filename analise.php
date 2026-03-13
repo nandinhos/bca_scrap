@@ -295,21 +295,25 @@ if (isset($arquivo) && file_exists($caminho.$arquivo)) {
             
             $total_saram = count(array_filter($snippet_positions, function($v) { return $v === 'saram'; }));
             
-            // Uma única passagem para buscar nome completo
-            $pos = 0;
-            while (($pos = stripos($tei_upper, $nome_completo, $pos)) !== false) {
-                if (!isset($snippet_positions[$pos])) {
-                    $snippet_positions[$pos] = 'nome';
-                } else {
-                    // Se já existe, marca como ambos
-                    $snippet_positions[$pos] = 'ambos';
+            // Uma única passagem para buscar nome completo com word boundaries (evita partial matches)
+            $nome_completo_escaped = preg_quote($nome_completo, '/');
+            $nome_pattern = '/\b' . $nome_completo_escaped . '\b/i';
+            preg_match_all($nome_pattern, $tei_upper, $nome_matches, PREG_OFFSET_CAPTURE);
+            $total_nome = count($nome_matches[0]);
+            
+            // Armazenar posições do nome para snippets
+            if ($total_nome > 0) {
+                foreach ($nome_matches[0] as $match) {
+                    $pos = $match[1];
+                    if (!isset($snippet_positions[$pos])) {
+                        $snippet_positions[$pos] = 'nome';
+                    } else {
+                        $snippet_positions[$pos] = 'ambos';
+                    }
                 }
-                $pos += 1;
             }
             
-            $total_nome = count(array_filter($snippet_positions, function($v) { return $v === 'nome' || $v === 'ambos'; }));
-            
-            // Determinar tipo de busca
+            // Determinar tipo de busca - aceita SARAM, nome completo (word boundary), ou ambos
             if ($total_saram > 0 && $total_nome > 0) {
                 $encontrado_por = 'SARAM + NOME';
                 $total_ocorrencias = max($total_saram, $total_nome);
@@ -319,6 +323,9 @@ if (isset($arquivo) && file_exists($caminho.$arquivo)) {
             } elseif ($total_nome > 0) {
                 $encontrado_por = 'NOME COMPLETO';
                 $total_ocorrencias = $total_nome;
+            } else {
+                $encontrado_por = '';
+                $total_ocorrencias = 0;
             }
             
             // Gerar snippets apenas para ocorrências encontradas
@@ -337,6 +344,7 @@ if (isset($arquivo) && file_exists($caminho.$arquivo)) {
                     $start = max(0, $pos - $snippet_len);
                     $end = min($tei_len, $pos + $snippet_len);
                     $snippet = substr($content, $start, $end - $start);
+                    $snippet = mb_strtoupper($snippet, 'UTF-8');
                     $snippet = preg_replace('/[ \t]+/', ' ', $snippet);
                     $snippet = trim($snippet);
                     $snippet = str_replace('\n', "\n", $snippet);
