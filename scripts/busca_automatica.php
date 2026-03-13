@@ -241,28 +241,23 @@ try {
             $stmt_check->execute([$militar['id'], $arquivo]);
             
             if ($stmt_check->rowCount() === 0) {
-                // Salvar em bca_email com enviado = 0
-                $enviado = $militar['oculto'] ? 0 : 1;
-                
                 $stmt_ins = $pdo->prepare("
                     INSERT INTO bca_email (email, func_id, texto, bca, data, enviado) 
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, 0)
                 ");
                 $stmt_ins->execute([
                     $militar['email'],
                     $militar['id'],
                     'Publicação BCA',
                     $arquivo,
-                    $data_busca,
-                    0 // Sempre 0 inicialmente
+                    $data_busca
                 ]);
                 
                 $id_registro = $pdo->lastInsertId();
                 
                 echo "    → {$militar['nome_guerra']} ({$militar['email']}) - ";
                 
-                // Enviar email SE NÃO for oculto
-                if ($enviado === 0 && !empty($militar['email'])) {
+                if (!$militar['oculto'] && !empty($militar['email'])) {
                     $email_ok = enviarEmailNotificacao(
                         $militar['email'],
                         $militar['nome_guerra'],
@@ -271,7 +266,6 @@ try {
                     );
                     
                     if ($email_ok) {
-                        // Atualizar status para enviado = 1
                         $stmt_upd = $pdo->prepare("UPDATE bca_email SET enviado = 1 WHERE id = ?");
                         $stmt_upd->execute([$id_registro]);
                         

@@ -1,17 +1,24 @@
 <?php
 // ===========================================
 // FUNÇÕES DE ENVIO DE EMAIL - GAC-PAC/COPAC
-// Versão usando mail() do PHP (sem dependências)
+// Versão usando PHPMailer
 // ===========================================
 
-// Configurações SMTP (podem ser sobrescritas por variáveis de ambiente)
+require_once __DIR__ . '/../PHPMailer/src/PHPMailer.php';
+require_once __DIR__ . '/../PHPMailer/src/SMTP.php';
+require_once __DIR__ . '/../PHPMailer/src/Exception.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
+
 define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.fab.mil.br');
 define('SMTP_PORT', getenv('SMTP_PORT') ?: 587);
 define('SMTP_USER', getenv('SMTP_USER') ?: 'fernandofss@fab.mil.br');
 define('SMTP_PASS', getenv('SMTP_PASS') ?: 'MNIGABTPLESDSNDK');
 define('SMTP_FROM', getenv('SMTP_FROM') ?: 'fernandofss@fab.mil.br');
 define('SMTP_FROM_NAME', getenv('SMTP_FROM_NAME') ?: 'Sistema BCA GAC-PAC');
-define('BASE_URL', getenv('BASE_URL') ?: 'http://10.132.64.125:8826');
+define('BASE_URL', getenv('BASE_URL') ?: 'http://localhost:8090');
 
 // Headers para email
 function getEmailHeaders() {
@@ -24,7 +31,7 @@ function getEmailHeaders() {
 }
 
 /**
- * Envia email de notificação para o militar usando mail()
+ * Envia email de notificação para o militar usando PHPMailer
  * 
  * @param string $email Endereço de email do destinatário
  * @param string $nome_guerra Nome de guerra do militar
@@ -38,12 +45,40 @@ function enviarEmailNotificacao($email, $nome_guerra, $bca, $data) {
         return false;
     }
     
-    $data_formatada = date('d/m/Y', strtotime($data));
-    $link_download = BASE_URL . '/arcadia/busca_bca/boletim_bca/' . $bca;
-    $assunto = "[BCA GAC-PAC] Menção encontrada - $data_formatada";
+    $mail = new PHPMailer(true);
     
-    // Corpo do email em HTML
-    $body = "
+    try {
+        $mail->isSMTP();
+        $mail->Host = SMTP_HOST;
+        $mail->Port = SMTP_PORT;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->SMTPAuth = true;
+        $mail->Username = SMTP_USER;
+        $mail->Password = SMTP_PASS;
+        
+        $mail->setFrom(SMTP_FROM, SMTP_FROM_NAME);
+        $mail->addAddress($email, $nome_guerra);
+        
+        $data_formatada = date('d/m/Y', strtotime($data));
+        $link_download = BASE_URL . '/arcadia/busca_bca/boletim_bca/' . $bca;
+        $mail->Subject = "[BCA GAC-PAC] Menção encontrada - $data_formatada";
+        
+        $mail->isHTML(true);
+        $mail->CharSet = 'UTF-8';
+        $mail->Body = gerarCorpoEmail($nome_guerra, $bca, $data_formatada, $link_download);
+        $mail->AltBody = strip_tags(str_replace('<br>', "\n", gerarCorpoEmail($nome_guerra, $bca, $data_formatada, $link_download)));
+        
+        $mail->send();
+        error_log("Email enviado com sucesso para: $email ($nome_guerra)");
+        return true;
+    } catch (Exception $e) {
+        error_log("Erro ao enviar email para $email: " . $mail->ErrorInfo);
+        return false;
+    }
+}
+
+function gerarCorpoEmail($nome_guerra, $bca, $data_formatada, $link_download) {
+    return "
     <!DOCTYPE html>
     <html>
     <head>
@@ -52,51 +87,39 @@ function enviarEmailNotificacao($email, $nome_guerra, $bca, $data) {
     <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
         <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
             <div style='background: #003366; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;'>
-                <h2 style='margin: 0;'>Sistema BCA - GAC-PAC/COPAC</h2>
+                <h2 style='margin: 0;'>Sistema BCA - GAC-PAC</h2>
             </div>
             
             <div style='background: #f9f9f9; padding: 20px; border: 1px solid #ddd;'>
                 <p>Prezado(a) <strong>" . htmlspecialchars($nome_guerra) . "</strong>,</p>
                 
-                <p>Há uma menção de seu nome no Boletim de Comando da Aeronáutica.</p>
+                <p>Ha uma mencao de seu nome no Boletim de Comando da Aeronautica.</p>
                 
                 <div style='background: white; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #003366;'>
-                    <p style='margin: 5px 0;'><strong>Publicação:</strong> " . htmlspecialchars($bca) . "</p>
+                    <p style='margin: 5px 0;'><strong>Publicacao:</strong> " . htmlspecialchars($bca) . "</p>
                     <p style='margin: 5px 0;'><strong>Data:</strong> $data_formatada</p>
                 </div>
                 
                 <p style='text-align: center;'>
                     <a href='" . htmlspecialchars($link_download) . "' style='display: inline-block; background: #003366; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;'>
-                        📄 Baixar BCA
+                        Baixar BCA
                     </a>
                 </p>
                 
                 <p style='font-size: 12px; color: #666; margin-top: 20px;'>
-                    Link direto: <a href='" . htmlspecialchars($link_download) . "'>" . htmlspecialchars($link_download) . "</a>
+                    Link direto: <a href='" . htmlspecialchars($link_download) . "'>.../" . htmlspecialchars($bca) . "</a>
                 </p>
             </div>
             
             <div style='background: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #666; border-radius: 0 0 8px 8px;'>
-                <p style='margin: 5px 0;'>Sistema BCA - GAC-PAC/COPAC</p>
-                <p style='margin: 5px 0;'>Centro de Aviação de Propulsionamento e Aeronáutica de Alto Desempenho</p>
-                <p style='margin: 5px 0;'>Mensagem automática, favor não responder.</p>
+                <p style='margin: 5px 0;'>Sistema BCA - GAC-PAC</p>
+                <p style='margin: 5px 0;'>Centro de Aviacao de Propulsionamento e Aeronautica de Alto Desempenho</p>
+                <p style='margin: 5px 0;'>Mensagem automatica, favor nao responder.</p>
             </div>
         </div>
     </body>
     </html>
     ";
-    
-    // Tentar enviar usando mail() do PHP
-    $result = @mail($email, $assunto, $body, getEmailHeaders());
-    
-    if ($result) {
-        error_log("Email enviado com sucesso para: $email ($nome_guerra)");
-        return true;
-    } else {
-        $error = error_get_last();
-        error_log("Erro ao enviar email para $email: " . ($error['message'] ?? 'desconhecido'));
-        return false;
-    }
 }
 
 /**
@@ -123,7 +146,6 @@ function registrarLog($pdo, $tipo, $status, $mensagem, $registros = 0) {
  * Conecta ao banco de dados usando as configurações do ambiente
  */
 function conectarBanco() {
-    // Configurações do banco (mesmas do docker-compose)
     $host = getenv('DB_HOST') ?: 'mariadb';
     $user = getenv('DB_USER') ?: 'bca_user';
     $pass = getenv('DB_PASS') ?: 'bca_pass';
@@ -139,4 +161,44 @@ function conectarBanco() {
         error_log("Erro ao conectar banco: " . $e->getMessage());
         throw $e;
     }
+}
+
+if (!function_exists('buscarBCAPorData')) {
+function buscarBCAPorData($dia, $mes, $ano, $cendoc_url) {
+    $url = $cendoc_url . 'busca_bca_data.php';
+    
+    $postData = [
+        'dia_bca_ost' => $dia,
+        'mes_bca_ost' => $mes,
+        'ano_bca_ost' => $ano,
+        'pesquisar' => 'Pesquisar'
+    ];
+    
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'POST',
+            'header' => "Content-type: application/x-www-form-urlencoded\r\n",
+            'content' => http_build_query($postData),
+            'timeout' => 5
+        ]
+    ]);
+    
+    $response = @file_get_contents($url, false, $context);
+    
+    if ($response && preg_match('/BCA nº\.:\s*(\d+)/', $response, $matches)) {
+        return $matches[1];
+    }
+    
+    return false;
+}
+}
+
+if (!function_exists('baixarBCA')) {
+function baixarBCA($url, $caminho, $nome_arquivo) {
+    $data = @file_get_contents($url);
+    if ($data && file_put_contents($caminho . $nome_arquivo, $data)) {
+        return true;
+    }
+    return false;
+}
 }

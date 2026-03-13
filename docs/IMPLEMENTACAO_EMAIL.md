@@ -249,7 +249,7 @@ function gerarCorpoEmail($nome_guerra, $bca, $data_formatada, $link_download) {
     <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
         <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
             <div style='background: #003366; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;'>
-                <h2 style='margin: 0;'>Sistema BCA - GAC-PAC/COPAC</h2>
+                <h2 style='margin: 0;'>Sistema BCA - GAC-PAC</h2>
             </div>
             
             <div style='background: #f9f9f9; padding: 20px; border: 1px solid #ddd;'>
@@ -274,7 +274,7 @@ function gerarCorpoEmail($nome_guerra, $bca, $data_formatada, $link_download) {
             </div>
             
             <div style='background: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #666; border-radius: 0 0 8px 8px;'>
-                <p style='margin: 5px 0;'>Sistema BCA - GAC-PAC/COPAC</p>
+                <p style='margin: 5px 0;'>Sistema BCA - GAC-PAC</p>
                 <p style='margin: 5px 0;'>Centro de Aviação de Propulsionamento e Aeronáutica de Alto Desempenho</p>
                 <p style='margin: 5px 0;'>Mensagem automática, favor não responder.</p>
             </div>

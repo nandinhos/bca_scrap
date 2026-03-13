@@ -61,6 +61,18 @@ INSERT INTO palavras_chave (palavra, cor) VALUES
 ('Operações', 'D35400'),
 ('Instrutor', '2E86C1');
 
+-- Tabela de log de execuções
+CREATE TABLE IF NOT EXISTS bca_execucoes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    tipo VARCHAR(20) NOT NULL,
+    data_execucao DATETIME NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    mensagem TEXT,
+    registros_processados INT DEFAULT 0,
+    INDEX idx_tipo (tipo),
+    INDEX idx_data (data_execucao)
+);
+
 -- Exemplo de efetivo (adicione seus militares aqui)
 INSERT INTO efetivo (saram, nome_guerra, nome_completo, posto, especialidade, email, om_origem, ativo, oculto) VALUES
 ('12345678', 'SILVA', 'JOÃO DA SILVA', 'Tenente', 'AVIADOR', 'silva@fab.mil.br', 'GAC-PAC', 1, 0),

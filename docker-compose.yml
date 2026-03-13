@@ -9,11 +9,21 @@ services:
       - ./rodape.php:/var/www/html/rodape.php
       - ./index.php:/var/www/html/index.php
       - ./arcadia:/var/www/html/arcadia
+      - ./scripts:/var/www/html/scripts
+      - ./api:/var/www/html/api
+      - ./PHPMailer:/var/www/html/PHPMailer
     environment:
       - DB_HOST=mariadb
       - DB_USER=bca_user
       - DB_PASS=bca_pass
       - DB_NAME=bca_db
+      - SMTP_HOST=smtp.fab.mil.br
+      - SMTP_PORT=587
+      - SMTP_USER=fernandofss@fab.mil.br
+      - SMTP_PASS=MNIGABTPLESDSNDK
+      - SMTP_FROM=fernandofss@fab.mil.br
+      - SMTP_FROM_NAME=Sistema BCA GAC-PAC
+      - BASE_URL=http://localhost:8090
     depends_on:
       mariadb:
         condition: service_healthy

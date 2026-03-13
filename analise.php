@@ -1,12 +1,102 @@
 <?php
 session_start();
 
+require_once __DIR__ . '/scripts/funcoes_email.php';
+
 $host = getenv('DB_HOST') ?: 'mariadb';
 $user = getenv('DB_USER') ?: 'bca_user';
 $pass = getenv('DB_PASS') ?: 'bca_pass';
 $db   = getenv('DB_NAME') ?: 'bca_db';
 
 $vai = mysqli_connect($host, $user, $pass, $db);
+
+if (isset($_POST['acao']) && $_POST['acao'] === 'enviar_email_manual') {
+    header('Content-Type: application/json');
+    
+    $func_id = (int)($_POST['func_id'] ?? 0);
+    $bca = $_POST['bca'] ?? '';
+    $data = $_POST['data'] ?? date('Y-m-d');
+    
+    $stmt = mysqli_prepare($vai, "SELECT * FROM efetivo WHERE id = ?");
+    mysqli_stmt_bind_param($stmt, 'i', $func_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $militar = mysqli_fetch_assoc($result);
+    
+    if ($militar && !empty($militar['email'])) {
+        $enviado = enviarEmailNotificacao(
+            $militar['email'],
+            $militar['nome_guerra'],
+            $bca,
+            $data
+        );
+        
+        if ($enviado) {
+            $stmt_ins = mysqli_prepare($vai, "
+                INSERT INTO bca_email (email, func_id, texto, bca, data, enviado) 
+                VALUES (?, ?, ?, ?, ?, 1)
+            ");
+            $texto = 'Busca manual';
+            mysqli_stmt_bind_param($stmt_ins, 'sisss', $militar['email'], $func_id, $texto, $bca, $data);
+            mysqli_stmt_execute($stmt_ins);
+            
+            echo json_encode(['success' => true, 'message' => 'Email enviado com sucesso']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Falha ao enviar email']);
+        }
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Militar não encontrado ou sem email']);
+    }
+    exit;
+}
+
+if (isset($_POST['acao']) && $_POST['acao'] === 'enviar_emails_massa') {
+    header('Content-Type: application/json');
+    
+    $ids = json_decode($_POST['ids'] ?? '[]');
+    $bca = $_POST['bca'] ?? '';
+    $data = $_POST['data'] ?? date('Y-m-d');
+    
+    $enviados = 0;
+    $falhas = 0;
+    
+    foreach ($ids as $func_id) {
+        $stmt = mysqli_prepare($vai, "SELECT * FROM efetivo WHERE id = ?");
+        mysqli_stmt_bind_param($stmt, 'i', $func_id);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $militar = mysqli_fetch_assoc($result);
+        
+        if ($militar && !empty($militar['email'])) {
+            $ok = enviarEmailNotificacao(
+                $militar['email'],
+                $militar['nome_guerra'],
+                $bca,
+                $data
+            );
+            
+            if ($ok) {
+                $stmt_ins = mysqli_prepare($vai, "
+                    INSERT INTO bca_email (email, func_id, texto, bca, data, enviado) 
+                    VALUES (?, ?, ?, ?, ?, 1)
+                ");
+                $texto = 'Busca manual (massa)';
+                mysqli_stmt_bind_param($stmt_ins, 'sisss', $militar['email'], $func_id, $texto, $bca, $data);
+                mysqli_stmt_execute($stmt_ins);
+                $enviados++;
+            } else {
+                $falhas++;
+            }
+        }
+    }
+    
+    echo json_encode([
+        'success' => true,
+        'enviados' => $enviados,
+        'falhas' => $falhas
+    ]);
+    exit;
+}
 
 function limpa_campo($valor) {
     return preg_replace('/[^0-9]/', '', $valor);
@@ -29,52 +119,46 @@ function get_page($url) {
     return $return;
 }
 
-if(isset($_GET['dia']) && isset($_GET['mes']) && isset($_GET['ano'])){
+$tem_busca = isset($_GET['dia']) && isset($_GET['mes']) && isset($_GET['ano']);
+$palavras = [];
+$arquivo = null;
+$encontrados = [];
+$resp_efetivo = '';
+$link = '/arcadia/busca_bca/boletim_bca/';
+
+if ($tem_busca) {
     $dia = str_pad(limpa_campo($_GET['dia']),2,'0', STR_PAD_LEFT);
     $mes =  str_pad(limpa_campo($_GET['mes']),2,'0', STR_PAD_LEFT);
     $ano = limpa_campo($_GET['ano']);
-}else{
-    $dia = date("d", time());
-    $mes = date("m", time());
-    $ano = date("Y", time());
-}
 
-$data_completa = $dia.'/'.$mes.'/'.$ano;
-$date = $ano.'/'.$mes.'/'.$dia;
+    $data_completa = $dia.'/'.$mes.'/'.$ano;
+    $date = $ano.'/'.$mes.'/'.$dia;
 
-// Caminho local para download (funciona offline)
-$link = '/arcadia/busca_bca/boletim_bca/';
+    $link_icea = 'http://www.icea.intraer/app/arcadia/busca_bca/boletim_bca/';
+    $cendoc_url = 'http://www.cendoc.intraer/sisbca/consulta_bca/';
+    $caminho = "/var/www/html/arcadia/busca_bca/boletim_bca/";
 
-// URL de fallback externo (ICEA) - usado apenas se download local falhar
-$link_icea = 'http://www.icea.intraer/app/arcadia/busca_bca/boletim_bca/';
-
-// URL base do CENDOC para busca
-$cendoc_url = 'http://www.cendoc.intraer/sisbca/consulta_bca/';
-
-$caminho = "/var/www/html/arcadia/busca_bca/boletim_bca/";
-
-if (!is_dir($caminho)) {
-    mkdir($caminho, 0777, true);
-}
-
-$palavras = array();
-$sql_palavras = "SELECT id, palavra, cor, ativa FROM palavras_chave";
-$result_palavras = mysqli_query($vai, $sql_palavras);
-if ($result_palavras) {
-    while ($row = mysqli_fetch_assoc($result_palavras)) {
-        $palavras[] = array($row['palavra'], $row['cor'], 0, $row['ativa'], $row['id']);
+    if (!is_dir($caminho)) {
+        mkdir($caminho, 0777, true);
     }
-}
 
-if (empty($palavras)) {
-    $palavras = array(
-        array('GAC-PAC','3498DB',0,1,1),
-        array('COPAC','E74C3C',0,1,2),
-    );
-}
+    $sql_palavras = "SELECT id, palavra, cor, ativa FROM palavras_chave";
+    $result_palavras = mysqli_query($vai, $sql_palavras);
+    if ($result_palavras) {
+        while ($row = mysqli_fetch_assoc($result_palavras)) {
+            $palavras[] = array($row['palavra'], $row['cor'], 0, $row['ativa'], $row['id']);
+        }
+    }
 
-$tem_arq = false;
-$arr_arquivos = array();
+    if (empty($palavras)) {
+        $palavras = array(
+            array('GAC-PAC','3498DB',0,1,1),
+            array('COPAC','E74C3C',0,1,2),
+        );
+    }
+
+    $tem_arq = false;
+    $arr_arquivos = array();
 
 if ( $handle = opendir($caminho) ) {
     while ( $entry = readdir( $handle ) ) {
@@ -85,45 +169,6 @@ if ( $handle = opendir($caminho) ) {
             }
         }
     }
-}
-
-// Função para buscar BCA via API do CENDOC
-// Retorna o número do BCA ou false se não encontrar
-function buscarBCAPorData($dia, $mes, $ano, $cendoc_url) {
-    $url = $cendoc_url . 'busca_bca_data.php';
-    
-    $postData = [
-        'dia_bca_ost' => $dia,
-        'mes_bca_ost' => $mes,
-        'ano_bca_ost' => $ano,
-        'pesquisar' => 'Pesquisar'
-    ];
-    
-    $context = stream_context_create([
-        'http' => [
-            'method' => 'POST',
-            'header' => "Content-type: application/x-www-form-urlencoded\r\n",
-            'content' => http_build_query($postData),
-            'timeout' => 5
-        ]
-    ]);
-    
-    $response = @file_get_contents($url, false, $context);
-    
-    if ($response && preg_match('/BCA nº\.:\s*(\d+)/', $response, $matches)) {
-        return $matches[1]; // Retorna o número do BCA (ex: 47)
-    }
-    
-    return false;
-}
-
-// Função para baixar BCA de uma URL
-function baixarBCA($url, $caminho, $nome_arquivo) {
-    $data = @file_get_contents($url);
-    if ($data && file_put_contents($caminho . $nome_arquivo, $data)) {
-        return true;
-    }
-    return false;
 }
 
 // Lógica de busca de BCA com fallbacks
@@ -310,21 +355,26 @@ if (isset($arquivo) && file_exists($caminho.$arquivo)) {
                 // Pegar até 3 snippets únicos
                 $snippets_unicos = array_slice($snippets, 0, 3);
                 
+                $sql_check = "SELECT id, enviado FROM bca_email WHERE func_id = ".$militar['id']." AND bca = '".$arquivo."' ORDER BY id DESC LIMIT 1";
+                $result_check = mysqli_query($vai, $sql_check);
+                $ja_enviado = false;
+                if(mysqli_num_rows($result_check) > 0) {
+                    $row_check = mysqli_fetch_assoc($result_check);
+                    $ja_enviado = (int)$row_check['enviado'] === 1;
+                }
+                
+                if(mysqli_num_rows($result_check) === 0 && $militar['email']){
+                    $sql_ins = "INSERT INTO bca_email (email, func_id, texto, bca, data, enviado) VALUES ('".$militar['email']."', '".$militar['id']."', 'Publicação BCA', '".$arquivo."', '".$date."', 0)";
+                    mysqli_query($vai, $sql_ins);
+                }
+                
                 $encontrados[] = array(
                     'militar' => $militar,
                     'ocorrencias' => $total_ocorrencias,
                     'encontrado_por' => $encontrado_por,
-                    'snippets' => $snippets_unicos
+                    'snippets' => $snippets_unicos,
+                    'email_enviado' => $ja_enviado
                 );
-                
-                $sql_check = "SELECT id FROM bca_email WHERE func_id = ".$militar['id']." AND bca = '".$arquivo."'";
-                $result_check = mysqli_query($vai, $sql_check);
-                
-                if(mysqli_num_rows($result_check) === 0 && $militar['email']){
-                    $enviado = $militar['oculto'] ? 0 : 1;
-                    $sql_ins = "INSERT INTO bca_email (email, func_id, texto, bca, data, enviado) VALUES ('".$militar['email']."', '".$militar['id']."', 'Publicação BCA', '".$arquivo."', '".$date."', ".$enviado.")";
-                    mysqli_query($vai, $sql_ins);
-                }
             }
         }
     }
@@ -345,6 +395,18 @@ if (isset($arquivo) && file_exists($caminho.$arquivo)) {
             $resp_efetivo .= '<div class="flex items-center gap-3">';
             $resp_efetivo .= '<span class="px-3 py-1 bg-red-100 text-red-700 text-sm font-bold rounded-full">'.$e['ocorrencias'].' ocorrência(s)</span>';
             $resp_efetivo .= '<span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">'.$e['encontrado_por'].'</span>';
+            
+            if (!empty($e['email_enviado'])) {
+                $resp_efetivo .= '<span class="ml-2 px-2 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded flex items-center gap-1">';
+                $resp_efetivo .= '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+                $resp_efetivo .= 'Email Enviado</span>';
+            } elseif ($m['email'] && !$m['oculto']) {
+                $resp_efetivo .= '<button onclick="enviarEmail('.$m['id'].', \''.$m['nome_guerra'].'\', \''.$arquivo.'\', \''.$date.'\')" id="btn-email-'.$m['id'].'" class="ml-2 px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-lg transition flex items-center gap-1">';
+                $resp_efetivo .= '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>';
+                $resp_efetivo .= 'Enviar Email</button>';
+            } else {
+                $resp_efetivo .= '<span class="ml-2 px-2 py-1 bg-slate-100 text-slate-500 text-xs rounded">Sem email ou oculto</span>';
+            }
             
             // Botão retrátil para prévia
             if (!empty($e['snippets'])) {
@@ -424,6 +486,7 @@ if (isset($arquivo) && file_exists($caminho.$arquivo)) {
     }
     
     $resp_palavras = $content;
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -549,7 +612,10 @@ if (isset($arquivo) && file_exists($caminho.$arquivo)) {
         <!-- Card de Palavras-chave (topo) -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-slate-800">Palavras-chave</h3>
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-800">Palavras-chave</h3>
+                    <p class="text-xs text-amber-600 mt-1">Selecione as palavras desejadas antes de buscar para filtrar o conteúdo</p>
+                </div>
                 <span class="text-xs text-slate-500">Clique para ativar/desativar</span>
             </div>
             <div class="flex flex-wrap gap-2" id="palavras-chave-busca">
@@ -658,8 +724,19 @@ if (isset($arquivo) && file_exists($caminho.$arquivo)) {
         <?php if($resp_efetivo != ''): ?>
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 mb-6">
             <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                <h2 class="text-lg font-semibold text-slate-800">Ocorrências do Efetivo</h2>
-                <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-sm rounded-full"><?= count($encontrados) ?> militar(es) encontrado(s)</span>
+                <div class="flex items-center gap-3">
+                    <h2 class="text-lg font-semibold text-slate-800">Ocorrências do Efetivo</h2>
+                    <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-sm rounded-full"><?= count($encontrados) ?> militar(es) encontrado(s)</span>
+                </div>
+                <?php if(isset($arquivo) && !empty($encontrados)): ?>
+                <button onclick="enviarTodosEmails('<?= $arquivo ?>', '<?= $date ?>')" id="btn-enviar-todos" 
+                        class="px-4 py-2 bg-fab-600 hover:bg-fab-700 text-white text-sm font-medium rounded-lg transition flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                    Enviar Todos (<span id="count-enviar-todos"><?= count($encontrados) ?></span>)
+                </button>
+                <?php endif; ?>
             </div>
             <div class="p-6">
                 <?= $resp_efetivo ?>
@@ -1068,6 +1145,101 @@ if (isset($arquivo) && file_exists($caminho.$arquivo)) {
                 }
             } catch (e) {
                 console.error('Erro ao alternar palavra:', e);
+            }
+        }
+        
+        async function enviarEmail(funcId, nomeGuerra, bca, data) {
+            const btn = document.getElementById('btn-email-' + funcId);
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+            btn.innerHTML = 'Enviando...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('acao', 'enviar_email_manual');
+                formData.append('func_id', funcId);
+                formData.append('bca', bca);
+                formData.append('data', data);
+                
+                const response = await fetch('', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
+                    btn.classList.add('bg-slate-400');
+                    btn.innerHTML = '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Enviado';
+                    alert('Email enviado para ' + nomeGuerra + '!');
+                } else {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50');
+                    alert('Erro: ' + result.message);
+                }
+            } catch (e) {
+                console.error('Erro ao enviar email:', e);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+                alert('Erro ao enviar email');
+            }
+        }
+        
+        async function enviarTodosEmails(bca, data) {
+            const btn = document.getElementById('btn-enviar-todos');
+            const countEl = document.getElementById('count-enviar-todos');
+            const count = parseInt(countEl.innerText);
+            
+            if (!confirm('Enviar email para todos os ' + count + ' militares encontrados?')) return;
+            
+            btn.disabled = true;
+            btn.innerHTML = 'Enviando...';
+            
+            const ids = [];
+            document.querySelectorAll('[id^="btn-email-"]').forEach(el => {
+                const id = parseInt(el.id.replace('btn-email-', ''));
+                if (id && !el.classList.contains('bg-slate-400')) {
+                    ids.push(id);
+                }
+            });
+            
+            try {
+                const formData = new FormData();
+                formData.append('acao', 'enviar_emails_massa');
+                formData.append('ids', JSON.stringify(ids));
+                formData.append('bca', bca);
+                formData.append('data', data);
+                
+                const response = await fetch('', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                alert('Enviados: ' + result.enviados + ', Falhas: ' + result.falhas);
+                
+                document.querySelectorAll('[id^="btn-email-"]').forEach(el => {
+                    if (!el.classList.contains('bg-slate-400')) {
+                        el.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
+                        el.classList.add('bg-slate-400');
+                        el.innerHTML = '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Enviado';
+                    }
+                });
+                
+                btn.disabled = true;
+                btn.innerHTML = 'Todos Enviados';
+                btn.classList.add('bg-slate-400');
+                countEl.innerText = '0';
+            } catch (e) {
+                console.error('Erro ao enviar emails:', e);
+                btn.disabled = false;
+                btn.innerHTML = 'Enviar Todos (<span id="count-enviar-todos">' + count + '</span>)';
+                alert('Erro ao enviar emails');
             }
         }
         
