@@ -5,3 +5,4 @@ arcadia/busca_bca/boletim_bca/*.txt
 vendor/
 node_modules/
 .env
+.serena/
