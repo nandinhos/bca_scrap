@@ -524,6 +524,13 @@ if (isset($arquivo) && file_exists($caminho.$arquivo)) {
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
     <script>
+        // Wrapper para fetch que inclui credenciais por padrão
+        const originalFetch = window.fetch;
+        window.fetch = async function(url, options = {}) {
+            options.credentials = options.credentials || 'same-origin';
+            return originalFetch(url, options);
+        };
+
         tailwind.config = {
             theme: {
                 extend: {
