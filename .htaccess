@@ -20,39 +20,13 @@
     Header always unset X-Powered-By
 </IfModule>
 
-# Protecao de diretorios
+# Processar arquivos PHP
 <IfModule mod_php.c>
-    php_flag engine off
-</IfModule>
-
-# Bloqueia acesso a arquivos sensiveis
-<FilesMatch "^\.">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
-
-<FilesMatch "\.(env|log|sql|sh|bat|md|yml|yaml)$">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
-
-# Indexacao
-Options -Indexes
-
-# PHP
-<IfModule mod_php7.c>
+    AddType application/x-httpd-php .php
+    DirectoryIndex index.php index.html
     php_flag display_startup_errors off
     php_flag display_errors off
     php_flag html_errors off
     php_value docref_root 0
     php_value docref_ext 0
 </IfModule>
-
-# TLS (requer modulo SSL)
-# SSLOptions +StrictRequire
-# SSLCompression off
-# SSLSessionTickets off
-# SSLProtocol all -SSLv2 -SSLv3 -TLSv1 -TLSv1.1
-
-# HSTS (descomentar apos certificado SSL instalado)
-# Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains"

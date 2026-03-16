@@ -6,7 +6,9 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     && docker-php-ext-install mysqli pdo pdo_mysql \
-    && a2enmod rewrite headers
+    && a2enmod rewrite headers \
+    && sed -i 's/DirectoryIndex disabled/DirectoryIndex index.php index.html/' /etc/apache2/conf-available/docker-php.conf \
+    && sed -i 's/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
 
 COPY analise.php /var/www/html/
 COPY *.php /var/www/html/
