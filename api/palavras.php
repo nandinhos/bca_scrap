@@ -2,6 +2,7 @@
 header('Content-Type: application/json');
 
 require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/validacao.php';
 verificarAutenticacao();
 verificarRateLimit();
 
@@ -26,11 +27,15 @@ switch ($acao) {
         break;
         
     case 'adicionar':
-        $palavra = trim($_POST['palavra'] ?? '');
-        $cor = trim($_POST['cor'] ?? '3498DB');
+        $palavra = sanitizarInput($_POST['palavra'] ?? '', 100);
+        $cor = sanitizarInput($_POST['cor'] ?? '3498DB', 6);
         
         if (empty($palavra)) {
-            response_json(['sucesso' => false, 'erro' => 'Palavra é obrigatória']);
+            response_json(['sucesso' => false, 'erro' => 'Palavra e obrigatoria']);
+        }
+        
+        if (!validarComprimento($palavra, 1, 100)) {
+            response_json(['sucesso' => false, 'erro' => 'Palavra deve ter entre 1 e 100 caracteres']);
         }
         
         $cor = str_replace('#', '', $cor);
@@ -48,11 +53,15 @@ switch ($acao) {
         
     case 'editar':
         $id = intval($_POST['id'] ?? 0);
-        $palavra = trim($_POST['palavra'] ?? '');
-        $cor = trim($_POST['cor'] ?? '3498DB');
+        $palavra = sanitizarInput($_POST['palavra'] ?? '', 100);
+        $cor = sanitizarInput($_POST['cor'] ?? '3498DB', 6);
         
         if (empty($palavra) || $id === 0) {
-            response_json(['sucesso' => false, 'erro' => 'Dados inválidos']);
+            response_json(['sucesso' => false, 'erro' => 'Dados invalidos']);
+        }
+        
+        if (!validarComprimento($palavra, 1, 100)) {
+            response_json(['sucesso' => false, 'erro' => 'Palavra deve ter entre 1 e 100 caracteres']);
         }
         
         $cor = str_replace('#', '', $cor);

@@ -2,6 +2,7 @@
 header('Content-Type: application/json');
 
 require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/validacao.php';
 verificarAutenticacao();
 verificarRateLimit();
 
@@ -60,14 +61,24 @@ switch ($acao) {
         break;
         
     case 'adicionar':
-        $saram = trim($_POST['saram'] ?? '');
-        $nome_guerra = strtoupper(trim($_POST['nome_guerra'] ?? ''));
-        $nome_completo = strtoupper(trim($_POST['nome_completo'] ?? ''));
-        $posto = strtoupper(trim($_POST['posto'] ?? ''));
-        $email = trim($_POST['email'] ?? '');
+        $saram = sanitizarInput($_POST['saram'] ?? '', 8);
+        $nome_guerra = sanitizarInput($_POST['nome_guerra'] ?? '', 50);
+        $nome_completo = sanitizarInput($_POST['nome_completo'] ?? '', 200);
+        $posto = sanitizarInput($_POST['posto'] ?? '', 20);
+        $email = sanitizarInput($_POST['email'] ?? '', 255);
         
         if (empty($saram) || empty($nome_guerra)) {
-            echo json_encode(['sucesso' => false, 'erro' => 'SARAM e Nome de Guerra são obrigatórios']);
+            echo json_encode(['sucesso' => false, 'erro' => 'SARAM e Nome de Guerra sao obrigatorios']);
+            exit;
+        }
+        
+        if (!validarSaram($saram)) {
+            echo json_encode(['sucesso' => false, 'erro' => 'SARAM deve ter 7 ou 8 digitos']);
+            exit;
+        }
+        
+        if (!validarEmail($email)) {
+            echo json_encode(['sucesso' => false, 'erro' => 'Email invalido']);
             exit;
         }
         
@@ -84,14 +95,24 @@ switch ($acao) {
         
     case 'editar':
         $id = intval($_POST['id'] ?? 0);
-        $saram = trim($_POST['saram'] ?? '');
-        $nome_guerra = strtoupper(trim($_POST['nome_guerra'] ?? ''));
-        $nome_completo = strtoupper(trim($_POST['nome_completo'] ?? ''));
-        $posto = strtoupper(trim($_POST['posto'] ?? ''));
-        $email = trim($_POST['email'] ?? '');
+        $saram = sanitizarInput($_POST['saram'] ?? '', 8);
+        $nome_guerra = sanitizarInput($_POST['nome_guerra'] ?? '', 50);
+        $nome_completo = sanitizarInput($_POST['nome_completo'] ?? '', 200);
+        $posto = sanitizarInput($_POST['posto'] ?? '', 20);
+        $email = sanitizarInput($_POST['email'] ?? '', 255);
         
         if (empty($saram) || empty($nome_guerra) || $id === 0) {
-            echo json_encode(['sucesso' => false, 'erro' => 'Dados inválidos']);
+            echo json_encode(['sucesso' => false, 'erro' => 'Dados invalidos']);
+            exit;
+        }
+        
+        if (!validarSaram($saram)) {
+            echo json_encode(['sucesso' => false, 'erro' => 'SARAM deve ter 7 ou 8 digitos']);
+            exit;
+        }
+        
+        if (!validarEmail($email)) {
+            echo json_encode(['sucesso' => false, 'erro' => 'Email invalido']);
             exit;
         }
         
