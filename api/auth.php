@@ -1,5 +1,11 @@
 <?php
+session_start();
+
 function verificarAutenticacao() {
+    if (isset($_SESSION['usuario_logado']) && $_SESSION['usuario_logado'] === true) {
+        return true;
+    }
+    
     $token_required = getenv('API_TOKEN_REQUIRED') ?: 'false';
     
     if ($token_required === 'false' || $token_required === '0') {
@@ -22,6 +28,15 @@ function verificarAutenticacao() {
     }
     
     return true;
+}
+
+function obterTokenApi() {
+    if (isset($_SESSION['api_token'])) {
+        return $_SESSION['api_token'];
+    }
+    $token = bin2hex(random_bytes(32));
+    $_SESSION['api_token'] = $token;
+    return $token;
 }
 
 function verificarRateLimit($limite = 60, $janela = 60) {

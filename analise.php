@@ -2,6 +2,12 @@
 session_start();
 
 require_once __DIR__ . '/scripts/funcoes_email.php';
+require_once __DIR__ . '/scripts/login_auth.php';
+
+if (!verificarLogin()) {
+    header('Location: login.php');
+    exit;
+}
 
 $host = getenv('DB_HOST') ?: 'mariadb';
 $user = getenv('DB_USER') ?: 'bca_user';

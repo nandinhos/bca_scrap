@@ -10,6 +10,8 @@ services:
       - ./topo.php:/var/www/html/topo.php
       - ./rodape.php:/var/www/html/rodape.php
       - ./index.php:/var/www/html/index.php
+      - ./login.php:/var/www/html/login.php
+      - ./logout.php:/var/www/html/logout.php
       - ./arcadia:/var/www/html/arcadia
       - ./scripts:/var/www/html/scripts
       - ./api:/var/www/html/api
