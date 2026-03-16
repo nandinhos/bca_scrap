@@ -1,6 +1,9 @@
 <?php
 header('Content-Type: application/json');
 
+require_once __DIR__ . '/auth.php';
+verificarAutenticacao();
+
 $host = getenv('DB_HOST') ?: 'mariadb';
 $user = getenv('DB_USER') ?: 'bca_user';
 $pass = getenv('DB_PASS') ?: 'bca_pass';
