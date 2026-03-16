@@ -108,6 +108,13 @@ function unicode2html($str){
     return iconv("UTF-8", "ISO-8859-1//TRANSLIT", $str);
 }
 
+function sanitizeFilename($filename) {
+    if (!preg_match('/^bca_\d+_\d{2}-\d{2}-\d{4}\.pdf$/', $filename)) {
+        throw new Exception('Nome de arquivo invalido');
+    }
+    return basename($filename);
+}
+
 function get_page($url) {
     $curl = curl_init();
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, True);
@@ -241,7 +248,9 @@ if (isset($arquivo) && file_exists($caminho.$arquivo)) {
     if (file_exists($cache_file)) {
         $content = file_get_contents($cache_file);
     } else {
-        $content = shell_exec('/usr/bin/pdftotext -enc UTF-8 '.$caminho.$arquivo.' -');
+        $arquivo_seguro = sanitizeFilename($arquivo);
+        $caminho_seguro = escapeshellarg($caminho . $arquivo_seguro);
+        $content = shell_exec('/usr/bin/pdftotext -enc UTF-8 ' . $caminho_seguro . ' -');
         $content = mb_convert_encoding($content, 'UTF-8', 'UTF-8');
         // Salvar cache
         file_put_contents($cache_file, $content);

@@ -20,10 +20,12 @@
  * ===========================================
  */
 
-// Error reporting para debug
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-ini_set('log_errors', 1);
+function sanitizeFilename($filename) {
+    if (!preg_match('/^bca_\d+_\d{2}-\d{2}-\d{4}\.pdf$/', $filename)) {
+        throw new Exception('Nome de arquivo invalido');
+    }
+    return basename($filename);
+}
 
 // Carregar funções auxiliares
 require_once __DIR__ . '/funcoes_email.php';
@@ -193,7 +195,9 @@ try {
         echo "[9] ✓ Usando cache de texto\n";
     } else {
         echo "[9] Extraindo texto do PDF...\n";
-        $content = shell_exec('/usr/bin/pdftotext -enc UTF-8 ' . CAMINHO_BCA . $arquivo . ' -');
+        $arquivo_seguro = sanitizeFilename($arquivo);
+        $caminho_seguro = escapeshellarg(CAMINHO_BCA . $arquivo_seguro);
+        $content = shell_exec('/usr/bin/pdftotext -enc UTF-8 ' . $caminho_seguro . ' -');
         $content = mb_convert_encoding($content, 'UTF-8', 'UTF-8');
         file_put_contents($cache_file, $content);
         echo "    ✓ Texto extraído e salvo em cache\n";
