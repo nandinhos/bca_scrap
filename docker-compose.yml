@@ -3,6 +3,8 @@ services:
     build: .
     ports:
       - "8092:80"
+    env_file:
+      - .env
     volumes:
       - ./analise.php:/var/www/html/analise.php
       - ./topo.php:/var/www/html/topo.php
@@ -13,17 +15,17 @@ services:
       - ./api:/var/www/html/api
       - ./PHPMailer:/var/www/html/PHPMailer
     environment:
-      - DB_HOST=mariadb
-      - DB_USER=bca_user
-      - DB_PASS=bca_pass
-      - DB_NAME=bca_db
-      - SMTP_HOST=smtp.fab.mil.br
-      - SMTP_PORT=587
-      - SMTP_USER=fernandofss@fab.mil.br
-      - SMTP_PASS=MNIGABTPLESDSNDK
-      - SMTP_FROM=fernandofss@fab.mil.br
-      - SMTP_FROM_NAME=Sistema BCA GAC-PAC
-      - BASE_URL=http://localhost:8092
+      - DB_HOST=${DB_HOST:-mariadb}
+      - DB_USER=${DB_USER:-bca_user}
+      - DB_PASS=${DB_PASS}
+      - DB_NAME=${DB_NAME:-bca_db}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - SMTP_FROM=${SMTP_FROM}
+      - SMTP_FROM_NAME=${SMTP_FROM_NAME:-Sistema BCA GAC-PAC}
+      - BASE_URL=${BASE_URL:-http://localhost:8092}
     depends_on:
       mariadb:
         condition: service_healthy
@@ -31,15 +33,15 @@ services:
   mariadb:
     image: mariadb:10.11
     environment:
-      - MYSQL_ROOT_PASSWORD=rootpass
-      - MYSQL_DATABASE=bca_db
-      - MYSQL_USER=bca_user
-      - MYSQL_PASSWORD=bca_pass
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME:-bca_db}
+      - MYSQL_USER=${DB_USER:-bca_user}
+      - MYSQL_PASSWORD=${DB_PASS}
     volumes:
       - mariadb_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: [ "CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "root", "-prootpass" ]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       start_period: 10s
       interval: 5s
       timeout: 5s
@@ -52,9 +54,9 @@ services:
     environment:
       - PMA_HOST=mariadb
       - PMA_PORT=3306
-      - PMA_DATABASE=bca_db
-      - PMA_USER=bca_user
-      - PMA_PASSWORD=bca_pass
+      - PMA_DATABASE=${DB_NAME:-bca_db}
+      - PMA_USER=${DB_USER:-bca_user}
+      - PMA_PASSWORD=${DB_PASS}
       - PHP_UPLOAD_MAX_FILESIZE=100M
       - PHP_MAX_INPUT_VARS=1000
     depends_on:

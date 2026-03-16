@@ -12,11 +12,11 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
-define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.fab.mil.br');
+define('SMTP_HOST', getenv('SMTP_HOST') ?: '');
 define('SMTP_PORT', getenv('SMTP_PORT') ?: 587);
-define('SMTP_USER', getenv('SMTP_USER') ?: 'fernandofss@fab.mil.br');
-define('SMTP_PASS', getenv('SMTP_PASS') ?: 'MNIGABTPLESDSNDK');
-define('SMTP_FROM', getenv('SMTP_FROM') ?: 'fernandofss@fab.mil.br');
+define('SMTP_USER', getenv('SMTP_USER') ?: '');
+define('SMTP_PASS', getenv('SMTP_PASS') ?: '');
+define('SMTP_FROM', getenv('SMTP_FROM') ?: '');
 define('SMTP_FROM_NAME', getenv('SMTP_FROM_NAME') ?: 'Sistema BCA GAC-PAC');
 define('BASE_URL', getenv('BASE_URL') ?: 'http://localhost:8090');
 
