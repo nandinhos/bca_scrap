@@ -18,4 +18,11 @@ RUN mkdir -p /var/www/html/arcadia/busca_bca/boletim_bca
 RUN chmod -R 755 /var/www/html && \
     chmod -R 775 /var/www/html/arcadia/busca_bca/boletim_bca
 
+RUN useradd -m -s /bin/bash appuser && \
+    chown -R appuser:www-data /var/www/html
+
+EXPOSE 80
+
+USER www-data
+
 EXPOSE 80
