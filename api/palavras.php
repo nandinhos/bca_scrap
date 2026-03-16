@@ -3,6 +3,7 @@ header('Content-Type: application/json');
 
 require_once __DIR__ . '/auth.php';
 verificarAutenticacao();
+verificarRateLimit();
 
 $host = getenv('DB_HOST') ?: 'mariadb';
 $user = getenv('DB_USER') ?: 'bca_user';
