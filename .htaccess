@@ -9,8 +9,8 @@
     # Protecao XSS
     Header always set X-XSS-Protection "1; mode=block"
     
-    # Content Security Policy
-    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data:; font-src 'self' https://cdn.jsdelivr.net;"
+    # Content Security Policy - Permite CDNs necessarios
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' https://cdn.jsdelivr.net; img-src 'self' data: blob:; font-src 'self' https://cdn.jsdelivr.net; frame-src 'self';"
     
     # Previne vazamento de informacoes
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
