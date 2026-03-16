@@ -15,6 +15,7 @@ COPY .htaccess /var/www/html/
 
 RUN mkdir -p /var/www/html/arcadia/busca_bca/boletim_bca
 
-RUN chmod -R 777 /var/www/html/arcadia
+RUN chmod -R 755 /var/www/html && \
+    chmod -R 775 /var/www/html/arcadia/busca_bca/boletim_bca
 
 EXPOSE 80
