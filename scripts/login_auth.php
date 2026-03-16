@@ -9,11 +9,6 @@ function verificarLogin() {
 }
 
 function fazerLogin($usuario, $senha) {
-    $usuarios_validos = [
-        'admin' => password_hash('bca123', PASSWORD_DEFAULT),
-        'operador' => password_hash('bca456', PASSWORD_DEFAULT)
-    ];
-    
     $usuarios_simples = [
         'admin' => 'bca123',
         'operador' => 'bca456'

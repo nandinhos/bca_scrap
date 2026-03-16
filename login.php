@@ -1,3 +1,20 @@
+<?php
+session_start();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_once __DIR__ . '/scripts/login_auth.php';
+    
+    $usuario = $_POST['usuario'] ?? '';
+    $senha = $_POST['senha'] ?? '';
+    
+    if (fazerLogin($usuario, $senha)) {
+        header('Location: analise.php');
+        exit;
+    } else {
+        $erro = 'Usuario ou senha invalidos';
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -14,25 +31,7 @@
             <p class="text-gray-600">GAC-PAC</p>
         </div>
         
-        <?php
-        require_once __DIR__ . '/scripts/login_auth.php';
-        
-        $erro = '';
-        
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $usuario = $_POST['usuario'] ?? '';
-            $senha = $_POST['senha'] ?? '';
-            
-            if (fazerLogin($usuario, $senha)) {
-                header('Location: analise.php');
-                exit;
-            } else {
-                $erro = 'Usuário ou senha inválidos';
-            }
-        }
-        ?>
-        
-        <?php if ($erro): ?>
+        <?php if (isset($erro)): ?>
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             <?= htmlspecialchars($erro) ?>
         </div>
@@ -41,7 +40,7 @@
         <form method="POST" class="space-y-4">
             <div>
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="usuario">
-                    Usuário
+                    Usuario
                 </label>
                 <input type="text" id="usuario" name="usuario" required
                     class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
@@ -62,7 +61,7 @@
         </form>
         
         <div class="mt-4 text-center text-sm text-gray-500">
-            <p>Usuários disponíveis:</p>
+            <p>Usuarios disponiveis:</p>
             <p>admin / bca123</p>
             <p>operador / bca456</p>
         </div>
