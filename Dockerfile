@@ -6,11 +6,12 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     && docker-php-ext-install mysqli pdo pdo_mysql \
-    && a2enmod rewrite
+    && a2enmod rewrite headers
 
 COPY analise.php /var/www/html/
 COPY *.php /var/www/html/
 COPY *.html /var/www/html/
+COPY .htaccess /var/www/html/
 
 RUN mkdir -p /var/www/html/arcadia/busca_bca/boletim_bca
 

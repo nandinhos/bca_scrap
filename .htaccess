@@ -1,0 +1,58 @@
+# Security Headers
+<IfModule mod_headers.c>
+    # Previne clickjacking
+    Header always set X-Frame-Options "SAMEORIGIN"
+    
+    # Previne MIME sniffing
+    Header always set X-Content-Type-Options "nosniff"
+    
+    # Protecao XSS
+    Header always set X-XSS-Protection "1; mode=block"
+    
+    # Content Security Policy
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data:; font-src 'self' https://cdn.jsdelivr.net;"
+    
+    # Previne vazamento de informacoes
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Remove informacoes do servidor
+    Header always set Server "BCA-GAC-PAC"
+    Header always unset X-Powered-By
+</IfModule>
+
+# Protecao de diretorios
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+
+# Bloqueia acesso a arquivos sensiveis
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+<FilesMatch "\.(env|log|sql|sh|bat|md|yml|yaml)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Indexacao
+Options -Indexes
+
+# PHP
+<IfModule mod_php7.c>
+    php_flag display_startup_errors off
+    php_flag display_errors off
+    php_flag html_errors off
+    php_value docref_root 0
+    php_value docref_ext 0
+</IfModule>
+
+# TLS (requer modulo SSL)
+# SSLOptions +StrictRequire
+# SSLCompression off
+# SSLSessionTickets off
+# SSLProtocol all -SSLv2 -SSLv3 -TLSv1 -TLSv1.1
+
+# HSTS (descomentar apos certificado SSL instalado)
+# Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains"
