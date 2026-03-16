@@ -154,11 +154,20 @@ switch ($acao) {
         }
         
         $ids_int = array_map('intval', $ids);
-        $ids_str = implode(',', $ids_int);
+        $ids_int = array_filter($ids_int, function($v) { return $v > 0; });
         
-        $sql = "DELETE FROM efetivo WHERE id IN ($ids_str)";
+        if (empty($ids_int)) {
+            echo json_encode(['sucesso' => false, 'erro' => 'IDs invalidos']);
+            exit;
+        }
         
-        if (mysqli_query($vai, $sql)) {
+        $placeholders = implode(',', array_fill(0, count($ids_int), '?'));
+        $sql = "DELETE FROM efetivo WHERE id IN ($placeholders)";
+        
+        $stmt = mysqli_prepare($vai, $sql);
+        mysqli_stmt_bind_param($stmt, str_repeat('i', count($ids_int)), ...$ids_int);
+        
+        if (mysqli_stmt_execute($stmt)) {
             echo json_encode(['sucesso' => true]);
         } else {
             echo json_encode(['sucesso' => false, 'erro' => mysqli_error($vai)]);
